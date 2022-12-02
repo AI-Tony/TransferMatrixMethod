@@ -22,6 +22,10 @@ void TransferMatrixMethod::calculateRTM()
         complex<double> rtm = abs(-( IM[0]*bi*nt*nt - IM[3]*bt*ni*ni + 1i*(IM[2]*ni*ni*nt*nt + IM[1]*bi*bt ))/
                                    ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt )));
         reflectionTM.push_back(rtm);
+        
+        cout << rtm << endl;
+        cout << ni << " " << nt << " " << bi << " " << bt << " " << endl;
+        cout << IM[0] << " " << IM[1] << " " << IM[2] << " " << IM[3] << " " << endl;
     }
 }
 
@@ -29,12 +33,12 @@ void TransferMatrixMethod::totalMatrix(polarisation pol)
 {
     M.clear();
     M.push_back(1.0), M.push_back(0.0), M.push_back(0.0), M.push_back(1.0);
-    for (int i = mtm.layers; i > 0; i--) {
+    for (int i = mtm.layers-1; i >= 0; i--) {
         switch (pol) {
             case(TM): submatixTM(i);
             case(TE): submatixTE(i);
         }
-        MatMul(M, m);
+        MatMul();
     }
 }
 
@@ -49,7 +53,7 @@ void TransferMatrixMethod::submatixTM(int i)
     m.push_back( sin(beta*d)*n*n/beta);
     m.push_back(-sin(beta*d)*beta/(n*n));
     m.push_back( cos(beta*d));
-    cout << n << " " << beta <<  endl;
+    // cout << d << " " << n << " " << beta <<  endl;
 }
 
 void TransferMatrixMethod::submatixTE(int l)
@@ -62,7 +66,7 @@ void TransferMatrixMethod::submatixTE(int l)
     // m[3] =  cos(b*d);
 }
 
-void TransferMatrixMethod::MatMul(vector<complex<double>> M, vector<complex<double>> m) 
+void TransferMatrixMethod::MatMul() 
 {
     complex<double> M1 = M[0], M2 = M[1], M3 = M[2], M4 = M[3]; 
     complex<double> m1 = m[0], m2 = m[1], m3 = m[2], m4 = m[3]; 

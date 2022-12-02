@@ -35,5 +35,5 @@ class TransferMatrixMethod
     void submatixTM(int);
     void submatixTE(int);
     void invertMatrix();
-    void MatMul(vector<complex<double>>, vector<complex<double>>);
+    void MatMul();
 };
