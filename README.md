@@ -1,4 +1,4 @@
-# TMM
+# Transfer Matrix Method
 An implementation of the transfer matrix method for calculating reflection and transmission spectra of 1D multilayer metamaterials.
 
 !!!! THIS IS A WORK IN PROGRESS AND NOT READY FOR USE !!!!
