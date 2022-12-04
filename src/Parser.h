@@ -16,8 +16,8 @@ class Parser
   public:
     Parser();
     map<modes, bool> mode;
-    vector<signal> signals;
     vector<MTM> MTMs;
+    vector<signal> signals;
   
   private:
     ifstream file;

@@ -65,7 +65,7 @@ void Parser::parseSpectralWindow()
             for ( int i = 0; i < 2; i++ ) {
                 lineStream >> value1;
                 lineStream >> value2;
-                if ( stoi(value1) < stoi(value2) ) {
+                if ( stoi(value1) > stoi(value2) ) {
                     spectral_window.push_back( stoi(value1) );
                     spectral_window.push_back( stoi(value2) );
                 } else {
@@ -149,15 +149,15 @@ void Parser::parseThicknesses()
 }
 
 void Parser::setSignals() {
-    double step = double( spectral_window[1] - spectral_window[0] ) / discretisation ;
+    double step = double( spectral_window[0] - spectral_window[1] ) / discretisation ;
     for ( int theta = angular_window[0]; theta < angular_window[1]; theta++ ) {
         signal sig;
         sig.theta = theta*M_PI/180;
-        for ( double lambda = spectral_window[1]; lambda > spectral_window[0]; lambda -= step ) {
-            double k0 = 2.0*M_PI/(lambda*1e-9);
+        for (double lambda = spectral_window[0]; lambda > spectral_window[1]; lambda -= step) {
+            double k0 = 2.0*M_PI / ( lambda*1e-9 );
             sig.k0.push_back( k0 );
             sig.kx.push_back( k0*sin(theta) );
-            sig.omega.push_back( 3e8 * k0 );
+            sig.omega.push_back( 3e8 * k0 ); 
         }
         signals.push_back(sig);
     }
@@ -165,7 +165,7 @@ void Parser::setSignals() {
 
 void Parser::setMTMs()
 {
-    for ( int i = 0; i < thicknesses_all.size(); i++ ) {
+    for ( int i = 0; i < thicknesses_all.size(); i++ ) { 
         MTM mtm;
         mtm.layers = layers[i];
         mtm.materials = materials;
@@ -173,5 +173,3 @@ void Parser::setMTMs()
         MTMs.push_back(mtm);
     }
 }
-
-

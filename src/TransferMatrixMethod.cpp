@@ -1,69 +1,84 @@
 #include "TransferMatrixMethod.h"
-#include <cstdlib>
 #include <iostream>
 
-TransferMatrixMethod::TransferMatrixMethod(MTM mtm, signal sig) : mtm(mtm), sig(sig) 
-{
-    // materialProperties();
-}
 
-void TransferMatrixMethod::calculateRTM() 
+void TransferMatrixMethod::reflection(polarisation pol) 
 {
-    for (auto &k : sig.k0) {
-        k0 = k;
-        kx = k0 * sin(sig.theta); 
-        omega = 3e8 * k0;
-        complex<double> ni = mtm.refractiveIndex(mtm.materials.front(), omega); 
-        complex<double> nt = mtm.refractiveIndex(mtm.materials.back(), omega); 
-        complex<double> bi = sqrt(k0*k0*ni*ni - kx*kx); 
-        complex<double> bt = sqrt(k0*k0*nt*nt - kx*kx); 
-        totalMatrix(TM);
-        invertMatrix();
-        complex<double> rtm = abs(-( IM[0]*bi*nt*nt - IM[3]*bt*ni*ni + 1i*(IM[2]*ni*ni*nt*nt + IM[1]*bi*bt ))/
-                                   ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt )));
-        reflectionTM.push_back(rtm);
-        
-        cout << rtm << endl;
-        cout << ni << " " << nt << " " << bi << " " << bt << " " << endl;
-        cout << IM[0] << " " << IM[1] << " " << IM[2] << " " << IM[3] << " " << endl;
+    setProperties(pol);
+    for (int i = 0; i < sig.omega.size(); i++) {
+        ni = incidentRefractiveIndices[i];
+        nt = transmittedRefractiveIndices[i];
+        bi = incidentPropagationConstants[i];
+        bt = transmittedPropagationConstants[i];
+        switch (pol) {
+            case (TM):
+                IM = inverseMatricesTM[i];
+                rtm = abs(-( IM[0]*bi*nt*nt - IM[3]*bt*ni*ni + 1i*(IM[2]*ni*ni*nt*nt + IM[1]*bi*bt )) /
+                           ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt )));
+                reflectionTM.push_back(rtm);
+                cout << rtm << endl;
+                break;
+
+            case (TE):
+                IM = inverseMatricesTE[i];
+                rte = abs(-( IM[0]*bi - IM[3]*bt + 1i*(IM[2] + IM[1]*bi*bt )) /
+                           ( IM[0]*bi + IM[3]*bt - 1i*(IM[2] - IM[1]*bi*bt )));
+                reflectionTE.push_back(rte);
+                cout << rte << endl;
+                break;
+        }
     }
 }
 
-void TransferMatrixMethod::totalMatrix(polarisation pol)
+void TransferMatrixMethod::transmission(polarisation pol) 
+{
+    setProperties(pol);
+    for (int i = 0; i < sig.omega.size(); i++) {
+        ni = incidentRefractiveIndices[i];
+        nt = transmittedRefractiveIndices[i];
+        bi = incidentPropagationConstants[i];
+        bt = transmittedPropagationConstants[i];
+        switch (pol) {
+            case (TM):
+                IM = inverseMatricesTM[i];
+                ttm = abs( -2.0*ni*nt*bi / ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt )));
+                reflectionTM.push_back(ttm);
+                cout << rtm << endl;
+                break;
+
+            case (TE):
+                IM = inverseMatricesTE[i];
+                tte = abs( -2.0*bi / ( IM[0]*bi + IM[3]*bt - 1i*(IM[2] - IM[1]*bi*bt )));
+                reflectionTE.push_back(tte);
+                break;
+        }
+    }
+}
+
+void TransferMatrixMethod::totalMatrix(polarisation pol) 
 {
     M.clear();
-    M.push_back(1.0), M.push_back(0.0), M.push_back(0.0), M.push_back(1.0);
-    for (int i = mtm.layers-1; i >= 0; i--) {
-        switch (pol) {
-            case(TM): submatixTM(i);
-            case(TE): submatixTE(i);
-        }
+    M.push_back(1.0), M.push_back(0.0), M.push_back(0.0), M.push_back(1.0); 
+    for (int layer = mtm.layers-1; layer >= 0; layer--) { 
+        subMatrix(pol, layer);
         MatMul();
     }
 }
 
-void TransferMatrixMethod::submatixTM(int i)
+void TransferMatrixMethod::subMatrix(polarisation pol, int layer) 
 {
-    double d = mtm.thicknesses[i]; 
-    material mat = mtm.materials[i];
-    complex<double> n = mtm.refractiveIndex(mat, omega); 
-    complex<double> beta = sqrt(k0*k0*n*n - kx*kx);
+    double d = mtm.thicknesses[layer]; 
+    material mat = mtm.materials[layer+1]; 
+    switch (pol) {
+        case (TM): n = mtm.refractiveIndex(mat, omega); break;
+        case (TE): n = mtm.refractiveIndex(air, omega); break;
+    }
+    beta = sqrt(k0*k0*n*n - kx*kx);
     m.clear();
     m.push_back( cos(beta*d));
     m.push_back( sin(beta*d)*n*n/beta);
     m.push_back(-sin(beta*d)*beta/(n*n));
     m.push_back( cos(beta*d));
-    // cout << d << " " << n << " " << beta <<  endl;
-}
-
-void TransferMatrixMethod::submatixTE(int l)
-{
-    // double d = mtm.thicknesses[l]; 
-    // complex<double> b = beta[l+1]; 
-    // m[0] =  cos(b*d);
-    // m[1] =  sin(b*d)/b;
-    // m[2] = -sin(b*d)*b;
-    // m[3] =  cos(b*d);
 }
 
 void TransferMatrixMethod::MatMul() 
@@ -79,7 +94,7 @@ void TransferMatrixMethod::MatMul()
 
 void TransferMatrixMethod::invertMatrix()
 {
-    complex<double> det = M[0]*M[3] - M[1]*M[2] + 1e-15;
+    complex<double> det = M[0]*M[3] - M[1]*M[2] + 1e-99;
     IM.clear();
     IM.push_back( M[3] / det);
     IM.push_back(-M[1] / det);
@@ -87,19 +102,41 @@ void TransferMatrixMethod::invertMatrix()
     IM.push_back( M[0] / det);
 }
 
-// void TransferMatrixMethod::materialProperties() {
-//     set<material> unique_materials;
-//     for (auto &mat : mtm.materials) { unique_materials.insert(mat); }
-//     for (auto &mat : unique_materials) {
-//         vector<complex<double>> refractiveIndices;
-//         vector<complex<double>> propagationConstants;
-//         for (int i = 0; i < sig.omega.size(); i++) {
-//             complex<double> n = mtm.refractiveIndex(mat, sig.omega[i], sig.theta);
-//             complex<double> beta = sqrt(sig.k0[i]*sig.k0[i]*n*n - sig.kx[i]*sig.kx[i]);
-//             refractiveIndices.push_back(n);
-//             propagationConstants.push_back(beta);
-//         }
-//         refractive_indicies[mat] = refractiveIndices;
-//         propagation_constants[mat] = propagationConstants;
-//     }
-// }
+void TransferMatrixMethod::setProperties(polarisation pol) {
+    if (inverseMatricesTM.empty() || inverseMatricesTE.empty() || incidentRefractiveIndices.empty() || incidentPropagationConstants.empty() || transmittedRefractiveIndices.empty() || transmittedPropagationConstants.empty()) {
+        for (int i = 0; i < sig.omega.size(); i++) {
+            omega = sig.omega[i]; 
+            k0 = sig.k0[i]; 
+            kx = sig.kx[i]; 
+            if (incidentRefractiveIndices.size() < sig.omega.size()) {
+                ni = mtm.refractiveIndex(mtm.materials.front(), omega); 
+                bi = sqrt(k0*k0*ni*ni - kx*kx); 
+                incidentRefractiveIndices.push_back(ni);
+                incidentPropagationConstants.push_back(bi);
+            }
+            if (transmittedRefractiveIndices.size() < sig.omega.size()) {
+                nt = mtm.refractiveIndex(mtm.materials.back(), omega); 
+                bt = sqrt(k0*k0*nt*nt - kx*kx); 
+                transmittedRefractiveIndices.push_back(nt);
+                transmittedPropagationConstants.push_back(bt);
+            }
+            switch (pol) {
+                case (TM):
+                    if (inverseMatricesTM.size() < sig.omega.size()) {
+                        totalMatrix(TM); 
+                        invertMatrix();
+                        inverseMatricesTM.push_back(IM);
+                    }
+                    break;
+                    
+                case (TE):
+                    if (inverseMatricesTM.size() < sig.omega.size()) {
+                        totalMatrix(TE); 
+                        invertMatrix();
+                        inverseMatricesTM.push_back(IM);
+                    }
+                    break;
+            }
+        }
+    }
+}
