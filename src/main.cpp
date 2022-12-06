@@ -18,9 +18,11 @@ int main()
             if (parser.mode[TTM]==true) tmm.transmission(TM);
             if (parser.mode[TTE]==true) tmm.transmission(TE);
 
-            // for (auto &value : tmm.reflectionTM) {
-            //     cout << value << endl;
-            // }
+            for (int i = 0; i < tmm.reflectionTE.size(); i++) {
+                double sum = tmm.reflectionCoefficientsTM[i] + tmm.transmissionCoefficientsTM[i];
+                cout << sum << endl;
+                // cout << tmm.reflectionTM[i] << " " << tmm.reflectionTE[i] << " " << tmm.transmissionTM[i] << " " << tmm.transmissionTE[i] << endl;
+            }
         }
     }
 }
