@@ -13,18 +13,18 @@ void TransferMatrixMethod::reflection(polarisation pol)
         switch (pol) {
             case (TM):
                 IM = inverseMatricesTM[i];
-                rtm = -( IM[0]*bi*nt*nt - IM[3]*bt*ni*ni + 1i*(IM[2]*ni*ni*nt*nt + IM[1]*bi*bt )) /
-                           ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt ));
-                reflectionTM.push_back(rtm);
-                reflectionCoefficientsTM.push_back( abs(rtm)*abs(rtm) );
+                rtm =  -( IM[0]*bi*nt*nt - IM[3]*bt*ni*ni + 1i*(IM[2]*ni*ni*nt*nt + IM[1]*bi*bt )) /
+                        ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt ));
+                complexParts[RTM].push_back( rtm );
+                coefficients[RTM].push_back( abs(rtm)*abs(rtm) );
                 break;
 
             case (TE):
                 IM = inverseMatricesTE[i];
-                rte = -( IM[0]*bi - IM[3]*bt + 1i*(IM[2] + IM[1]*bi*bt )) /
-                           ( IM[0]*bi + IM[3]*bt - 1i*(IM[2] - IM[1]*bi*bt ));
-                reflectionTE.push_back(rte);
-                reflectionCoefficientsTE.push_back( abs(rte)*abs(rte) );
+                rte =  -( IM[0]*bi - IM[3]*bt + 1i*(IM[2] + IM[1]*bi*bt )) /
+                        ( IM[0]*bi + IM[3]*bt - 1i*(IM[2] - IM[1]*bi*bt ));
+                complexParts[RTE].push_back( rte );
+                coefficients[RTE].push_back( abs(rte)*abs(rte) );
                 break;
         }
     }
@@ -42,15 +42,15 @@ void TransferMatrixMethod::transmission(polarisation pol)
             case (TM):
                 IM = inverseMatricesTM[i];
                 ttm = -2.0*ni*nt*bi / ( IM[0]*bi*nt*nt + IM[3]*bt*ni*ni - 1i*(IM[2]*ni*ni*nt*nt - IM[1]*bi*bt ));
-                transmissionTM.push_back(ttm);
-                transmissionCoefficientsTM.push_back( abs(ttm)*abs(ttm) );
+                complexParts[TTM].push_back( ttm );
+                coefficients[TTM].push_back( abs(ttm)*abs(ttm)*(bt/bi).real() );
                 break;
 
             case (TE):
                 IM = inverseMatricesTE[i];
                 tte = -2.0*bi / ( IM[0]*bi + IM[3]*bt - 1i*(IM[2] - IM[1]*bi*bt ));
-                transmissionTE.push_back(tte);
-                transmissionCoefficientsTE.push_back( abs(tte)*abs(tte) );
+                complexParts[TTE].push_back( tte );
+                coefficients[TTE].push_back( abs(tte)*abs(tte)*(bt/bi).real() );
                 break;
         }
     }
