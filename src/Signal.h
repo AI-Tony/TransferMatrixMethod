@@ -11,6 +11,7 @@ enum modes {RTM, RTE, TTM, TTE};
 struct signal
 {
     double theta;
+    int lower, upper;
     vector<double> k0;
     vector<double> kx;
     vector<double> omega;
