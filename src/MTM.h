@@ -14,6 +14,7 @@ class MTM
     int layers;
     vector<double> thicknesses; 
     vector<material> materials; 
+    static string convert(material &); 
     static material convert(string &); 
     complex<double> refractiveIndex(material, double); 
 
