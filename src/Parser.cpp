@@ -153,6 +153,8 @@ void Parser::setSignals() {
     for ( int theta = angular_window[0]; theta < angular_window[1]; theta++ ) {
         signal sig;
         sig.theta = theta*M_PI/180;
+        sig.lower = spectral_window[1];
+        sig.upper = spectral_window[0];
         for (double lambda = spectral_window[0]; lambda > spectral_window[1]; lambda -= step) {
             double k0 = 2.0*M_PI / ( lambda*1e-9 );
             sig.k0.push_back( k0 );
