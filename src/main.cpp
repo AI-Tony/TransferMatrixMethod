@@ -16,6 +16,13 @@ void data_to_file(ofstream &, string, signal &, MTM &);
 int main() 
 {
     Parser parser; 
+
+    // while (true) {
+
+    // }
+
+
+
     string DIR_PATH = "data/" + get_date();
     filesystem::create_directory(DIR_PATH);
 
@@ -86,32 +93,40 @@ string get_date()
 
 void data_to_file(ofstream &file, string path_to_file, vector<double> &omega, vector<double> &data) {
     if (!file.is_open()) {
+        file.precision(32);
         file.open(path_to_file);
-        for (auto &w : omega) {
-            file << w << ',';
+        for (int i = 0; i < omega.size(); i++) {
+            file << omega[i];
+            if ( i < omega.size()-1 ) { file << ','; }
         }
         file << endl;
+        file.precision(6);
     }
-    for (auto &num : data) {
-        file << num << ',';
+    for (int i = 0; i < data.size(); i++) {
+        file << data[i];
+        if ( i < data.size()-1 ) { file << ','; }
     }
     file << endl;
 } 
 
 void data_to_file(ofstream &file, string path_to_file, vector<double> &omega, vector<complex<double>> &data) {
     if (!file.is_open()) {
+        file.precision(32);
         file.open(path_to_file);
-        for (auto &w : omega) {
-            file << w << ',';
+        for (int i = 0; i < omega.size(); i++) {
+            file << omega[i];
+            if ( i < omega.size()-1 ) { file << ','; }
         }
         file << endl;
+        file.precision(6);
     }
-    for (auto &num : data) {
-        if (num.imag() < 0) {
-            file << num.real() << num.imag() << 'j' << ',';
+    for (int i = 0; i < data.size(); i++) {
+        if (data[i].imag() < 0) {
+            file << data[i].real() << data[i].imag() << 'j';
         } else {
-            file << num.real() << '+' << num.imag() << 'j' << ',';
+            file << data[i].real() << '+' << data[i].imag() << 'j';
         }
+        if ( i < data.size()-1 ) { file << ','; }
     }
     file << endl;
 } 
