@@ -1,11 +1,76 @@
 #include <iostream>
 #include <fstream>
+#include <ostream>
 #include <time.h>
 #include <filesystem>
 #include "Parser.h"
 #include "TransferMatrixMethod.h"
 
 #define MAX_DATE 20
+
+string get_date();
+void data_to_file(ofstream &, string, vector<double> &, vector<double> &);
+void data_to_file(ofstream &, string, vector<double> &, vector<complex<double>> &);
+void data_to_file(ofstream &, string, signal &, MTM &);
+
+int main() 
+{
+    Parser parser; 
+    string DIR_PATH = "data/" + get_date();
+    filesystem::create_directory(DIR_PATH);
+
+    ofstream metadata;
+    ofstream RTM_complexparts;
+    ofstream RTE_complexparts;
+    ofstream TTM_complexparts;
+    ofstream TTE_complexparts;
+    ofstream RTM_coefficients;
+    ofstream RTE_coefficients;
+    ofstream TTM_coefficients;
+    ofstream TTE_coefficients;
+
+    for ( auto &mtm : parser.MTMs ) {
+        
+        for ( auto &sig : parser.signals ) {
+
+            TransferMatrixMethod tmm(mtm, sig);
+
+            data_to_file(metadata, DIR_PATH+"metadata.csv", sig, mtm);
+            
+            if (parser.mode[RTM]==true) {
+                tmm.reflection(TM);
+                data_to_file(RTM_complexparts, DIR_PATH+"RTM_complexparts.csv", sig.omega, tmm.complexParts[RTM]);
+                data_to_file(RTM_coefficients, DIR_PATH+"RTM_coefficients.csv", sig.omega, tmm.coefficients[RTM]);
+            }
+            if (parser.mode[RTE]==true) {
+                tmm.reflection(TE);
+                data_to_file(RTE_complexparts, DIR_PATH+"RTE_complexparts.csv", sig.omega, tmm.complexParts[RTE]);
+                data_to_file(RTE_coefficients, DIR_PATH+"RTE_coefficients.csv", sig.omega, tmm.coefficients[RTE]);
+            }
+            if (parser.mode[TTM]==true) {
+                tmm.transmission(TM);
+                data_to_file(TTM_complexparts, DIR_PATH+"TTM_complexparts.csv", sig.omega, tmm.complexParts[TTM]);
+                data_to_file(TTM_coefficients, DIR_PATH+"TTM_coefficients.csv", sig.omega, tmm.coefficients[TTM]);
+            }
+            if (parser.mode[TTE]==true) {
+                tmm.transmission(TE);
+                data_to_file(TTE_complexparts, DIR_PATH+"TTE_complexparts.csv", sig.omega, tmm.complexParts[TTE]);
+                data_to_file(TTE_coefficients, DIR_PATH+"TTE_coefficients.csv", sig.omega, tmm.coefficients[TTE]);
+            }
+        }
+    }
+
+    metadata.close();
+    RTM_complexparts.close();
+    RTE_complexparts.close();
+    TTM_complexparts.close();
+    TTE_complexparts.close();
+    RTM_coefficients.close();
+    RTE_coefficients.close();
+    TTM_coefficients.close();
+    TTE_coefficients.close();
+}
+
 
 string get_date()
 {
@@ -19,22 +84,43 @@ string get_date()
    return string(the_date) + "/";
 }
 
-void output_data(ofstream &file, vector<double> &data) {
-    for (auto &datum : data) {
-        file << datum << ',';
+void data_to_file(ofstream &file, string path_to_file, vector<double> &omega, vector<double> &data) {
+    if (!file.is_open()) {
+        file.open(path_to_file);
+        for (auto &w : omega) {
+            file << w << ',';
+        }
+        file << endl;
+    }
+    for (auto &num : data) {
+        file << num << ',';
     }
     file << endl;
 } 
 
-void output_data(ofstream &file, vector<complex<double>> &data) {
-    for (auto &datum : data) {
-        file << datum << ',';
+void data_to_file(ofstream &file, string path_to_file, vector<double> &omega, vector<complex<double>> &data) {
+    if (!file.is_open()) {
+        file.open(path_to_file);
+        for (auto &w : omega) {
+            file << w << ',';
+        }
+        file << endl;
+    }
+    for (auto &num : data) {
+        if (num.imag() < 0) {
+            file << num.real() << num.imag() << 'j' << ',';
+        } else {
+            file << num.real() << '+' << num.imag() << 'j' << ',';
+        }
     }
     file << endl;
 } 
 
-void output_data(ofstream &file, signal &sig, MTM &mtm) {
-    file << "theta," << "lower," << "upper," << "materials," << "thicknesses" << endl;
+void data_to_file(ofstream &file, string path_to_file, signal &sig, MTM &mtm) {
+    if (!file.is_open()) {
+        file.open(path_to_file);
+        file << "theta," << "lower," << "upper," << "materials," << "thicknesses" << endl;
+    }
     file << sig.theta << ',' << sig.lower << ',' << sig.upper << ',';
     for (auto &m : mtm.materials) {
         file << ' ' << MTM::convert(m);
@@ -43,66 +129,5 @@ void output_data(ofstream &file, signal &sig, MTM &mtm) {
     for (auto &t : mtm.thicknesses) {
         file << ' ' << t;
     }
-}
-
-int main() 
-{
-    Parser parser; 
-
-    string DIR_NAME = get_date();
-    string DIR_PATH = "data/";
-    filesystem::create_directory(DIR_PATH + DIR_NAME);
-
-    ofstream metadata;
-    ofstream RTM_complexparts;
-    ofstream RTE_complexparts;
-    ofstream TTM_complexparts;
-    ofstream TTE_complexparts;
-    ofstream RTM_coefficients;
-    ofstream RTE_coefficients;
-    ofstream TTM_coefficients;
-    ofstream TTE_coefficients;
-
-    metadata.open(DIR_PATH + DIR_NAME + "metadata.csv");
-    RTM_complexparts.open(DIR_PATH + DIR_NAME + "RTM_complexparts.csv");
-    RTE_complexparts.open(DIR_PATH + DIR_NAME + "RTE_complexparts.csv");
-    TTM_complexparts.open(DIR_PATH + DIR_NAME + "TTM_complexparts.csv");
-    TTE_complexparts.open(DIR_PATH + DIR_NAME + "TTE_complexparts.csv");
-    RTM_coefficients.open(DIR_PATH + DIR_NAME + "RTM_coefficients.csv");
-    RTE_coefficients.open(DIR_PATH + DIR_NAME + "RTE_coefficients.csv");
-    TTM_coefficients.open(DIR_PATH + DIR_NAME + "TTM_coefficients.csv");
-    TTE_coefficients.open(DIR_PATH + DIR_NAME + "TTE_coefficients.csv");
-
-    for ( auto &mtm : parser.MTMs ) {
-        
-        for ( auto &sig : parser.signals ) {
-
-            TransferMatrixMethod tmm(mtm, sig);
-            
-            if (parser.mode[RTM]==true) tmm.reflection(TM);
-            if (parser.mode[RTE]==true) tmm.reflection(TE);
-            if (parser.mode[TTM]==true) tmm.transmission(TM);
-            if (parser.mode[TTE]==true) tmm.transmission(TE);
-
-            output_data(metadata, sig, mtm);
-            output_data(RTM_complexparts, tmm.complexParts[RTM]);
-            output_data(RTE_complexparts, tmm.complexParts[RTE]);
-            output_data(TTM_complexparts, tmm.complexParts[TTM]);
-            output_data(TTE_complexparts, tmm.complexParts[TTE]);
-            output_data(RTM_coefficients, tmm.coefficients[RTM]);
-            output_data(RTE_coefficients, tmm.coefficients[RTE]);
-            output_data(TTM_coefficients, tmm.coefficients[TTM]);
-            output_data(TTE_coefficients, tmm.coefficients[TTE]);
-        }
-    }
-
-    metadata.close();
-    RTM_complexparts.close();
-    RTE_complexparts.close();
-    TTM_complexparts.close();
-    TTE_complexparts.close();
-    RTM_coefficients.close();
-    RTE_coefficients.close();
-    TTM_coefficients.close();
-    TTE_coefficients.close();
+    file << endl;
 }
