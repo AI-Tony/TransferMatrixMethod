@@ -158,7 +158,7 @@ void Parser::setSignals() {
         for (double lambda = spectral_window[0]; lambda > spectral_window[1]; lambda -= step) {
             double k0 = 2.0*M_PI / ( lambda*1e-9 );
             sig.k0.push_back( k0 );
-            sig.kx.push_back( k0*sin(theta) );
+            sig.kx.push_back( k0*sin(sig.theta) );
             sig.omega.push_back( 3e8 * k0 ); 
         }
         signals.push_back(sig);
