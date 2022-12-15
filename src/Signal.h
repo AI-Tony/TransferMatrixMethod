@@ -6,7 +6,7 @@
 using namespace std;
 
 enum polarisation{TM, TE};
-enum modes {RTM, RTE, TTM, TTE};
+enum mode{RTM, RTE, TTM, TTE}; 
 
 struct signal
 {
