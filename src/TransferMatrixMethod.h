@@ -16,8 +16,8 @@ class TransferMatrixMethod
     TransferMatrixMethod(MTM mtm, signal sig) : mtm(mtm), sig(sig) {}
     void reflection(polarisation);
     void transmission(polarisation);
-    map<modes, vector<double>> coefficients;
-    map<modes, vector<complex<double>>> complexParts; 
+    map<mode, vector<double>> coefficients;
+    map<mode, vector<complex<double>>> complexParts; 
 
   private:
     MTM mtm;
