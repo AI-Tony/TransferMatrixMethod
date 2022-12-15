@@ -1,6 +1,6 @@
 #include "MTM.h"
 
-string MTM::convert(material &mat) {
+string MTM::convert(material mat) {
     if(mat==air) return "air";
     else if (mat==tio2) return "tio2";
     else if (mat==sio2) return "sio2";
@@ -8,7 +8,7 @@ string MTM::convert(material &mat) {
     else printf("Error: invalid material!"); exit(1);
 }
 
-material MTM::convert(string &str) {
+material MTM::convert(string str) {
     if(str=="air") return air;
     else if (str=="tio2") return tio2;
     else if (str=="sio2") return sio2;
